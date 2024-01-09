@@ -8,6 +8,7 @@ class SNAKE:
     def __init__(self):
         # initializing with starting position of snake
         self.body = [Vector2(5,10), Vector2(6,10), Vector2(7,10)]
+        self.direction = Vector2(1,0)
 
     def draw_snake(self):
         for block in self.body:
@@ -21,6 +22,21 @@ class SNAKE:
                                      cell_size, cell_size)
         
             pygame.draw.rect(screen, (100,20,255), snake_rect)
+
+    def move_snake(self):
+        """     ## MOVING THE SNAKE ## 
+            1. Head is moved to a new block
+            2. The block before the head gets the position where 
+            the head used to be. 
+            3. Each block is moved to the position of the block 
+            that used to be before it.
+            4. deletes the last block.   
+        """
+        body_copy = self.body[:-1]
+        body_copy.insert(0,body_copy[0] + self.direction)
+        self.body = body_copy[:]
+
+    
 
 
 class FRUIT:
@@ -58,6 +74,9 @@ fruit = FRUIT()
 
 snake = SNAKE()
 
+SCREEN_UPDATE = pygame.USEREVENT
+pygame.time.set_timer(SCREEN_UPDATE, 150)
+
 while True:
     # HEre draw all the elements for game. 
 
@@ -66,6 +85,23 @@ while True:
         if(event.type == pygame.QUIT):
             pygame.quit()
             sys.exit()
+
+        if(event.type == SCREEN_UPDATE):
+            snake.move_snake()
+
+        if(event.type == pygame.KEYDOWN):
+
+            if(event.key == pygame.K_UP):
+                snake.direction = Vector2(0,-1)
+
+            elif(event.key == pygame.K_DOWN):
+                snake.direction = Vector2(0,1)
+
+            elif(event.key == pygame.K_LEFT):
+                snake.direction = Vector2(-1,0)
+            
+            elif(event.key == pygame.K_RIGHT):
+                snake.direction = Vector2(1,0)
     
     # screen.fill(pygame.Color('yellow'))
     screen.fill((175,215,70))
