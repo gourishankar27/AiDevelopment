@@ -10,17 +10,18 @@ screen = pygame.display.set_mode((600,700))
 clock = pygame.time.Clock()
 
 """
-1. Create a Surface, 
-    ( import an image, write text, or create an empty space. ) 
-
-            ORRRRRRRR
-
-2. Display the surface ( This could be the display surface 
-    or a regular surface )
+Display the surface 
+( This could be the display surface or a regular surface )
 """
 
-test_surface = pygame.Surface((50,50))
+test_surface = pygame.Surface((250,250))
 test_surface.fill((100,0,255))
+
+
+# test_rect = pygame.Rect(100,200,100,100)
+
+# test_rect = test_surface.get_rect( center = (400,250) )
+test_rect = test_surface.get_rect( topright = (400,250) )
 
 x_position = 0
 y_position = 0
@@ -40,7 +41,12 @@ while True:
     # x_position += 1
     # y_position += 2
 
-    screen.blit(test_surface,(x_position,y_position))
+    test_rect.right += 1 
+
+    # pygame.draw.rect(screen,(255,0,50), test_rect)
+    # pygame.draw.ellipse(screen,(255,0,50), test_rect)
+
+    screen.blit(test_surface,test_rect)
 
 
 
