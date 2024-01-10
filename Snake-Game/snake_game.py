@@ -4,11 +4,37 @@ import sys # gives access to lots of systems functionality.
 from pygame.math import Vector2
 
 
+class GAME:
+    def __init__(self):
+        self.snake = SNAKE()
+        self.fruit = FRUIT()
+
+    def game_update(self):
+        self.snake.move_snake()
+        main_game.check_collision()
+
+    def draw_elements(self):
+        self.snake.draw_snake()
+        self.fruit.draw_fruit()
+
+    def check_collision(self):
+        if(self.fruit.pos == self.snake.body[0]):
+            # Now reposition the fruit 
+            self.fruit.randomize()
+
+            # add another block to the snake
+            self.snake.add_block()
+            
+
+
 class SNAKE:
     def __init__(self):
         # initializing with starting position of snake
         self.body = [Vector2(5,10), Vector2(6,10), Vector2(7,10)]
         self.direction = Vector2(1,0)
+        self.new_block = False 
+        # Default value for new_block will be false, 
+        # and whenever snake eats fruit, it will be True
 
     def draw_snake(self):
         for block in self.body:
@@ -32,11 +58,22 @@ class SNAKE:
             that used to be before it.
             4. deletes the last block.   
         """
-        body_copy = self.body[:-1]
-        body_copy.insert(0,body_copy[0] + self.direction)
-        self.body = body_copy[:]
+        if(self.new_block):
+            body_copy = self.body[:]
+            body_copy.insert(0,body_copy[0] + self.direction)
+            self.body = body_copy[:]
+            # after adding new block, setting new_block to False
+            # until snake eats next fruit. 
+            self.new_block = False
+        else:
+            body_copy = self.body[:-1]
+            body_copy.insert(0,body_copy[0] + self.direction)
+            self.body = body_copy[:]
+        
 
-    
+    def add_block(self):
+        self.new_block = True
+
 
 
 class FRUIT:
@@ -59,6 +96,14 @@ class FRUIT:
 
         pygame.draw.rect(screen,(255,30,100), fruit_rect)
 
+    def randomize(self):
+        self.x = random.randint(0, cell_number - 1)
+        self.y = random.randint(0, cell_number - 1)
+
+        print(f"NEW FRUIT position x:{self.x} , y:{self.y}")
+
+        self.pos = Vector2(self.x, self.y)
+
 
 #it starts the pygame 
 pygame.init()
@@ -66,13 +111,15 @@ pygame.init()
 cell_size = 40
 cell_number = 20
 # Display surface. # set_mode((width,height))
-screen = pygame.display.set_mode((cell_number*cell_size, cell_number*cell_size))
+screen = pygame.display.set_mode((cell_number*cell_size, 
+                                    cell_number*cell_size))
 
 clock = pygame.time.Clock()
 
-fruit = FRUIT()
+# fruit = FRUIT()
+# snake = SNAKE()
 
-snake = SNAKE()
+main_game = GAME()
 
 SCREEN_UPDATE = pygame.USEREVENT
 pygame.time.set_timer(SCREEN_UPDATE, 150)
@@ -87,27 +134,31 @@ while True:
             sys.exit()
 
         if(event.type == SCREEN_UPDATE):
-            snake.move_snake()
+            # snake.move_snake()
+            main_game.game_update()
 
         if(event.type == pygame.KEYDOWN):
 
             if(event.key == pygame.K_UP):
-                snake.direction = Vector2(0,-1)
+                main_game.snake.direction = Vector2(0,-1)
 
             elif(event.key == pygame.K_DOWN):
-                snake.direction = Vector2(0,1)
+                main_game.snake.direction = Vector2(0,1)
 
             elif(event.key == pygame.K_LEFT):
-                snake.direction = Vector2(-1,0)
+                main_game.snake.direction = Vector2(-1,0)
             
             elif(event.key == pygame.K_RIGHT):
-                snake.direction = Vector2(1,0)
+                main_game.snake.direction = Vector2(1,0)
     
     # screen.fill(pygame.Color('yellow'))
     screen.fill((175,215,70))
 
-    fruit.draw_fruit()
-    snake.draw_snake()
+    # fruit.draw_fruit()
+    # snake.draw_snake()
+    main_game.draw_elements()
+
+    
 
     pygame.display.update()
 
