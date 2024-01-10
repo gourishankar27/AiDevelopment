@@ -2,6 +2,7 @@ import pygame
 import random
 import sys # gives access to lots of systems functionality. 
 from pygame.math import Vector2
+from enum import Enum
 
 
 class GAME:
@@ -9,24 +10,33 @@ class GAME:
         self.snake = SNAKE()
         self.fruit = FRUIT()
         self.score = 0
+        self.level = 1
 
     def game_update(self):
         self.snake.move_snake()
         self.check_collision()
         self.check_fail()
+        self.update_level()
 
     def draw_elements(self):
         self.snake.draw_snake()
         self.fruit.draw_fruit()
+        self.draw_score()
 
     def check_collision(self):
         if(self.fruit.pos == self.snake.body[0]):
             """ # Now reposition the fruit """
-            self.score += 1
-            print(f"SCORE : {self.score}")
             self.fruit.randomize()
             """ # Add another block to the snake """
             self.snake.add_block()
+
+            self.score +=1
+
+
+        """ If fruit is on the skanes body, randomize it again"""
+        for block in self.snake.body[:]:
+            if(block == self.fruit.pos):
+                self.fruit.randomize()
             
     def check_fail(self):
         """ # check if snake is out-side of the screen. """
@@ -40,16 +50,50 @@ class GAME:
             self.game_over()
 
         """ # Check if snake hits itself """
+        # print( f"  self.snake.body : { self.snake.body}")
         for block in self.snake.body[1:]:
+            # print(f" block : {block}")
+            # print(f" self.snake.body[0] : {self.snake.body[0]}")
             if block == self.snake.body[0]:
                 self.game_over()
-
-        
 
     def game_over(self):
         pygame.quit()
         sys.exit()
 
+    def draw_score(self):
+        score_text = f"Score: {self.score} Level: {self.level}"
+        score_surface = game_font.render(score_text, True, (56,74,12))
+        
+        score_x = int(cell_size * cell_number - 60)
+        score_y = int(cell_size * cell_number - 40)
+        score_rect = score_surface.get_rect(center = (score_x, score_y))
+        screen.blit(score_surface, score_rect)
+    
+    def update_level(self):
+        LEVEL_1 = 300
+        LEVEL_2 = 200
+        LEVEL_3 = 125
+        LEVEL_4 = 80
+        LEVEL_5 = 50
+
+        game_level = LEVEL_1
+        if(self.score >= 75):
+            game_level = LEVEL_5
+            self.level = 5
+        elif(self.score >= 40):
+            game_level = LEVEL_4
+            self.level = 4
+        elif(self.score >= 20):
+            game_level = LEVEL_3
+            self.level = 3
+        elif(self.score >= 5):
+            game_level = LEVEL_2
+            self.level = 2
+
+        print(f" CURRET SCORE : {self.score} :: LEVEL : {game_level}")
+        pygame.time.set_timer(SCREEN_UPDATE, int(game_level))
+        
 
 class SNAKE:
     def __init__(self):
@@ -71,7 +115,9 @@ class SNAKE:
                                      cell_size, cell_size)
         
             """ # draw the rectangle """
-            pygame.draw.rect(screen, (100,20,255), snake_rect)
+            pygame.draw.rect(screen, (200,20,200), snake_rect)
+
+            pygame.draw.rect(screen, (100,20,255), pygame.Rect(x_pos+4,y_pos+4,14,14))
 
     def move_snake(self):
         """     ## MOVING THE SNAKE ## 
@@ -90,15 +136,19 @@ class SNAKE:
             # until snake eats next fruit. 
             self.new_block = False
         else:
-            body_copy = self.body[:-1]
-            body_copy.insert(0,body_copy[0] + self.direction)
-            self.body = body_copy[:]
+            # print(f" self.direction : {self.direction}")
+            # print(f" BEFORE body : {self.body}")
+
+            if(self.direction.x != 0 or self.direction.y != 0):    
+                body_copy = self.body[:-1]
+                body_copy.insert(0,body_copy[0] + self.direction)
+                self.body = body_copy[:]
+            
+            # print(f" AFTER body : {self.body}")
         
 
     def add_block(self):
         self.new_block = True
-
-
 
 class FRUIT:
     def __init__(self):
@@ -118,7 +168,10 @@ class FRUIT:
         fruit_rect = pygame.Rect(x_pos, y_pos ,
                                  cell_size, cell_size)
 
-        pygame.draw.rect(screen,(255,30,100), fruit_rect)
+        # pygame.draw.rect(screen,(255,30,100), fruit_rect)
+        #insted of rectangle now we will draw apple. 
+
+        screen.blit(apple, fruit_rect)
 
     def randomize(self):
         self.x = random.randint(0, cell_number - 1)
@@ -132,21 +185,24 @@ class FRUIT:
 #it starts the pygame 
 pygame.init()
 
-cell_size = 40
+cell_size = 20
 cell_number = 20
-# Display surface. # set_mode((width,height))
-screen = pygame.display.set_mode((cell_number*cell_size, 
-                                    cell_number*cell_size))
+SNAKE_SPEED = 300 # LOWER is FASTER
+width = cell_number*cell_size
+height = cell_number*cell_size
+screen = pygame.display.set_mode((width, height))
 
 clock = pygame.time.Clock()
 
-# fruit = FRUIT()
-# snake = SNAKE()
+apple = pygame.image.load('img/apple.png')
+apple = pygame.transform.scale(apple,(cell_size,cell_size))
+
+game_font = pygame.font.SysFont('arial', 15)
 
 main_game = GAME()
 
 SCREEN_UPDATE = pygame.USEREVENT
-pygame.time.set_timer(SCREEN_UPDATE, 150)
+pygame.time.set_timer(SCREEN_UPDATE, SNAKE_SPEED)
 
 while True:
     # HEre draw all the elements for game. 
@@ -158,7 +214,6 @@ while True:
             sys.exit()
 
         if(event.type == SCREEN_UPDATE):
-            # snake.move_snake()
             main_game.game_update()
 
         if(event.type == pygame.KEYDOWN):
@@ -180,14 +235,9 @@ while True:
                 if(main_game.snake.direction.x != -1):
                     main_game.snake.direction = Vector2(1,0)
     
-    # screen.fill(pygame.Color('yellow'))
     screen.fill((175,215,70))
 
-    # fruit.draw_fruit()
-    # snake.draw_snake()
     main_game.draw_elements()
-
-    
 
     pygame.display.update()
 
